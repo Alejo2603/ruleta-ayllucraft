@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Ruleta Ayllucraft</title>
+    <!-- Usamos SweetAlert2 para notificaciones profesionales y rápidas -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; background-color: #1a1a1a; color: white; margin: 0; height: 100vh; }
+        
+        /* Contenedor principal con tu fondo */
+        .ruleta-container {
+            position: relative;
+            width: 800px; /* Ajusta según tu imagen */
+            height: 800px;
+            background-image: url('fondo.jpg');
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* La imagen de la ruleta que va a girar */
+        #ruleta {
+            width: 80%; /* Ajusta para que encaje en el hueco de tu fondo */
+            transition: transform 4s cubic-bezier(0.25, 0.1, 0.25, 1); /* Giro suave y realista */
+        }
+
+        /* Panel lateral para la gestión de nombres */
+        .panel-control {
+            padding: 20px;
+            width: 300px;
+            background: #2c2c2c;
+            border-left: 2px solid #555;
+        }
+
+        input, button { width: 100%; padding: 10px; margin-bottom: 10px; border-radius: 5px; border: none; }
+        button { background-color: #5b21b6; color: white; cursor: pointer; font-weight: bold; }
+        button:hover { background-color: #4c1d95; }
+        #btn-girar { background-color: #059669; font-size: 1.2em; margin-top: 20px; }
+        
+        ul { list-style: none; padding: 0; }
+        li { background: #3f3f46; margin-bottom: 5px; padding: 8px; border-radius: 4px; display: flex; justify-content: space-between; }
+    </style>
+</head>
+<body>
+
+    <div class="ruleta-container">
+        <!-- El puntero (la flechita superior) debería ser parte del fondo o una imagen absoluta aquí -->
+        <img id="ruleta" src="ruleta.png" alt="Ruleta">
+    </div>
+
+    <div class="panel-control">
+        <h2>Participantes</h2>
+        <input type="text" id="nombreInput" placeholder="Ingresa un nombre y presiona Enter">
+        <button onclick="agregarNombre()">Agregar</button>
+        
+        <ul id="listaParticipantes"></ul>
+
+        <button id="btn-girar" onclick="girarRuleta()">¡GIRAR RULETA!</button>
+    </div>
+<script>
+    
+    let participantes = [];
+    let rotacionActual = 0;
+
+    // Manejar ingreso con Enter
+    document.getElementById("nombreInput").addEventListener("keypress", function(event) {
+        if (event.key === "Enter") agregarNombre();
+    });
+
+    function agregarNombre() {
+        const input = document.getElementById('nombreInput');
+        const nombre = input.value.trim();
+        if (nombre && !participantes.includes(nombre)) {
+            participantes.push(nombre);
+            input.value = '';
+            actualizarLista();
+        }
+    }
+
+    function actualizarLista() {
+        const ul = document.getElementById('listaParticipantes');
+        ul.innerHTML = '';
+        participantes.forEach((nombre, index) => {
+            ul.innerHTML += `<li>${nombre} <span style="color:red;cursor:pointer" onclick="eliminarNombre(${index})">X</span></li>`;
+        });
+    }
+
+    function eliminarNombre(index) {
+        participantes.splice(index, 1);
+        actualizarLista();
+    }
+
+    function girarRuleta() {
+        if (participantes.length === 0) {
+            Swal.fire('Error', 'No hay participantes en la lista', 'error');
+            return;
+        }
+
+        // 1. Elegir un ganador al azar de la lista
+        const indiceGanador = Math.floor(Math.random() * participantes.length);
+        const ganador = participantes[indiceGanador];
+
+        // 2. Calcular giro (Mínimo 5 vueltas completas + un ángulo aleatorio)
+        const gradosExtra = Math.floor(Math.random() * 360);
+        rotacionActual += 1800 + gradosExtra; // 1800 = 5 vueltas (360 * 5)
+        
+        const ruletaImg = document.getElementById('ruleta');
+        const btnGirar = document.getElementById('btn-girar');
+        
+        // Bloquear botón mientras gira
+        btnGirar.disabled = true;
+        ruletaImg.style.transform = `rotate(${rotacionActual}deg)`;
+
+        // 3. Esperar que termine la animación (4 segundos en el CSS)
+        setTimeout(() => {
+            // Notificación profesional
+            Swal.fire({
+                title: '¡Tenemos un ganador!',
+                text: `¡${ganador} se lleva el premio que marca la ruleta!`,
+                icon: 'success',
+                confirmButtonText: '¡Genial!'
+            });
+
+            // Eliminar al ganador para que no repita
+            eliminarNombre(indiceGanador);
+            btnGirar.disabled = false;
+            
+        }, 4000); // Mismo tiempo que la transición CSS
+    }
+</script>
+</body>
+</html>
